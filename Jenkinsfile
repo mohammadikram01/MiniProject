@@ -13,33 +13,34 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
                 cd /var/lib/jenkins/workspace/git
-                pip3 install -r requirements.txt
+                docker build -t mini-flask-app .
                 '''
             }
         }
 
-        stage('Run Tests') {
+        stage('Stop Old Container') {
             steps {
-                sh 'pytest -v || echo "No tests found"'
+                sh "docker stop mini-flask-app || true"
+                sh "docker rm mini-flask-app || true"
             }
         }
 
-        stage('Restart Flask Service') {
+        stage('Run New Container') {
             steps {
                 sh '''
-                sudo systemctl daemon-reload
-                sudo systemctl restart flask
+                cd /var/lib/jenkins/workspace/git
+                docker run -d --name mini-flask-app -p 5000:5000 mini-flask-app
                 '''
             }
         }
     }
 
     post {
-        success { echo "Deployment Success" }
-        failure { echo "Deployment Failed - Check Console Output" }
+        success { echo "Docker Deployment Successful" }
+        failure { echo "Docker Deployment Failed" }
     }
 }
