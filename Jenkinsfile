@@ -33,10 +33,14 @@ pipeline {
 
         stage('Run Application') {
             steps {
-                sh "nohup python3 app.py > app.log 2>&1 &"
+                sh """
+                pkill -f app.py || true
+                nohup /usr/bin/python3 app.py > app.log 2>&1 &
+                """
                 echo "Application Started"
-            }
-        }
+    }
+}
+
     }
 
     post {
