@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        githubPush()   // Auto trigger on git push
+        githubPush()
     }
 
     stages {
@@ -15,13 +15,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip3 install -r requirements.txt || pip install -r requirements.txt'
+                sh 'pip3 install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'pytest -v || echo "No tests found, skipping"'
+                sh 'pytest -v || echo "No tests found"'
             }
         }
 
@@ -33,16 +33,18 @@ pipeline {
 
         stage('Run Application') {
             steps {
-                sh """
-                nohup python3 app.py > app.log 2>&1 &
-                """
-                echo "Application Started Successfully"
+                sh '''
+                cd /var/lib/jenkins/workspace/git      # go to project directory
+                nohup /usr/bin/python3 app.py > app.log 2>&1 &
+                sleep 5
+                '''
+                echo "Application Started"
             }
         }
     }
 
     post {
         success { echo "Deployment Successful" }
-        failure { echo "Build Failed. Check logs." }
+        failure { echo "Build Failed" }
     }
 }
